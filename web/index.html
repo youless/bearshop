@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#EAF5FE">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BearShop">
+<meta name="description" content="BearShop · 小店扫码销售系统 / Scan-and-sell system for small shops">
+<title>BearShop · 小店销售系统</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="phone">
+  <!-- ============ 顶栏 ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" id="brandMark"></span>
+      <span class="brand-text">
+        <span class="brand-name" id="brandName">BearShop</span>
+        <span class="brand-sub" data-i18n="tagline">小店销售系统</span>
+      </span>
+    </div>
+    <!-- 语言切换键（右上角）：中文界面显示 English，英文界面显示 中文 -->
+    <button class="lang-btn" id="langBtn" type="button" aria-label="Switch language">English</button>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ 1. 销售 ============ -->
+    <section class="view" id="view-sell">
+      <div class="card hero">
+        <div class="hero-top">
+          <span class="hero-bear" id="heroBear"></span>
+          <div class="hero-copy">
+            <h2 data-i18n="sell_scanBtn">扫码售出</h2>
+            <p data-i18n="sell_scanHint">对准商品二维码，品名与单价自动带出</p>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btnScanSell" type="button">
+          <span class="btn-ico" data-ico="sell"></span><span data-i18n="sell_scanBtn"></span>
+        </button>
+        <button class="btn btn-text btn-block" id="btnManualSell" type="button" data-i18n="sell_manual">输入编号</button>
+      </div>
+
+      <div class="card" id="cartCard">
+        <div class="card-head">
+          <h3 data-i18n="sell_cart">本单清单</h3>
+          <button class="mini danger" id="btnClearCart" type="button" hidden data-i18n="clear">清空</button>
+        </div>
+        <div id="cartList" class="cart-list"></div>
+        <div class="cart-total">
+          <span class="cart-total-label"><span data-i18n="total">合计</span> · <em id="cartCount">0</em></span>
+          <strong id="cartTotal">¥0.00</strong>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btnCheckout" type="button" disabled data-i18n="sell_checkout">结算收款</button>
+      </div>
+    </section>
+
+    <!-- ============ 2. 入库 ============ -->
+    <section class="view" id="view-stock">
+      <div class="card hero">
+        <div class="hero-top">
+          <span class="hero-bear" id="stockBear"></span>
+          <div class="hero-copy">
+            <h2 data-i18n="st_title">入库登记</h2>
+            <p data-i18n="st_hint">输入品名 → 自动出二维码 → 填数量即入库</p>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btnNameStock" type="button">
+          <span class="btn-ico" data-ico="product"></span><span data-i18n="st_nameBtn">输入品名入库</span>
+        </button>
+        <div class="row2">
+          <button class="btn btn-ghost" id="btnScanStock" type="button">
+            <span class="btn-ico" data-ico="stock"></span><span data-i18n="st_scanBtn">扫码入库</span>
+          </button>
+          <button class="btn btn-ghost" id="btnManualStock" type="button" data-i18n="sell_manual">输入编号</button>
+        </div>
+        <p class="help" data-i18n="st_codeHelp">用什么当编号都行：贴纸二维码、包装条码、手写数字</p>
+      </div>
+
+      <!-- 入库表单 -->
+      <div class="card" id="stockFormCard" hidden>
+        <div class="card-head">
+          <h3 id="stockFormTitle">新商品入库</h3>
+          <span class="pill" id="stockFormCode"></span>
+        </div>
+
+        <div id="stockNewFields">
+          <label class="field">
+            <span class="field-label" data-i18n="name">品名</span>
+            <input class="input" id="inName" type="text" autocomplete="off" data-i18n-ph="st_nameP">
+          </label>
+          <label class="field">
+            <span class="field-label" data-i18n="unitPrice">单价</span>
+            <span class="input-money"><i>¥</i><input class="input" id="inPrice" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="st_priceP"></span>
+          </label>
+          <div class="field">
+            <span class="field-label" data-i18n="st_pricing">计价方式</span>
+            <div class="seg" id="unitSeg">
+              <button type="button" class="on" data-unit="pc" data-i18n="byPiece">按件</button>
+              <button type="button" data-unit="jin" data-i18n="byJin">按斤</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="stockExistingBox" hidden>
+          <div class="kv"><span data-i18n="name">品名</span><b id="stkName">—</b></div>
+          <div class="kv"><span data-i18n="unitPrice">单价</span><b id="stkPrice">—</b></div>
+          <div class="kv"><span data-i18n="st_currentStock">当前库存</span><b id="stkStock">—</b></div>
+        </div>
+
+        <label class="field">
+          <span class="field-label" id="stockQtyLabel">入库数量</span>
+          <input class="input" id="inQty" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="st_qtyP">
+        </label>
+
+        <div class="row2">
+          <button class="btn btn-ghost" id="btnStockCancel" type="button" data-i18n="cancel">取消</button>
+          <button class="btn btn-primary" id="btnStockSave" type="button" data-i18n="save">保存</button>
+        </div>
+        <div class="row2" id="stockEditRow">
+          <button class="btn btn-text btn-block" id="btnStockEdit" type="button" data-i18n="st_editInfo">修改资料</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. 商品 ============ -->
+    <section class="view" id="view-product">
+      <div class="card search-card">
+        <span class="search-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        </span>
+        <input class="input-search" id="pdSearch" type="search" autocomplete="off" data-i18n-ph="pd_search">
+      </div>
+
+      <div class="list-head">
+        <span id="pdCount">共 0 个商品</span>
+        <span class="list-actions">
+          <button class="mini" id="btnPrintAll" type="button" data-i18n="lb_printAll">打印全部商品标签</button>
+          <button class="mini primary" id="btnAddProduct" type="button" data-i18n="pd_add">新增商品</button>
+        </span>
+      </div>
+      <div id="pdList" class="pd-list"></div>
+    </section>
+
+    <!-- ============ 4. 记录 ============ -->
+    <section class="view" id="view-record">
+      <div class="stat-grid" id="rcStats"></div>
+      <div class="list-head"><span id="rcCount"></span></div>
+      <div id="rcList"></div>
+    </section>
+
+    <!-- ============ 5. 设置 ============ -->
+    <section class="view" id="view-setting">
+      <div class="card">
+        <h3 class="card-title" data-i18n="se_shop">店铺名称</h3>
+        <input class="input" id="seShop" type="text" autocomplete="off" data-i18n-ph="se_shopP">
+      </div>
+
+      <div class="card">
+        <h3 class="card-title" data-i18n="se_language">语言 / Language</h3>
+        <div class="seg seg-wide" id="langSeg">
+          <button type="button" data-lang="zh">中文</button>
+          <button type="button" data-lang="en">English</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title" data-i18n="se_stats">数据概览</h3>
+        <div class="stat-grid" id="seStats"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title" data-i18n="se_data">数据管理</h3>
+        <p class="help" data-i18n="se_dataHint"></p>
+        <label class="field bk-field">
+          <span class="field-label" data-i18n="se_backupMail">备份邮箱</span>
+          <input class="input" id="seMail" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-ph="se_backupMailP">
+        </label>
+        <div class="bk-actions">
+          <button class="btn btn-soft btn-block" id="btnBackup" type="button" data-i18n="se_export">备份</button>
+          <button class="btn btn-soft btn-block" id="btnImport" type="button" data-i18n="se_import">导入备份文件</button>
+        </div>
+        <input type="file" id="fileImport" accept=".csv,text/csv,.json,application/json" hidden>
+      </div>
+
+      <div class="card about">
+        <span id="aboutBear"></span>
+        <p class="about-text" data-i18n="se_aboutText"></p>
+        <p class="about-ver" id="aboutVer"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 底部导航 ============ -->
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+
+<!-- ============ 扫码面板 ============ -->
+<div class="sheet sheet-full" id="scanSheet" hidden>
+  <div class="scan-wrap">
+    <div class="scan-head">
+      <span class="scan-title" id="scanTitle">扫码</span>
+      <button class="icon-btn" id="scanClose" type="button" aria-label="close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="scan-bear" id="scanBear"></div>
+    <div class="scan-stage">
+      <div class="qr-reader" id="qrReader"></div>
+      <div class="scan-frame">
+        <div class="scan-box"><i></i><i></i><i></i><i></i><span class="scan-line"></span></div>
+      </div>
+    </div>
+    <p class="scan-hint" id="scanHint">把二维码放进框内，自动识别</p>
+    <p class="scan-meta" id="scanMeta"></p>
+    <div class="scan-actions">
+      <button class="btn btn-ghost-dark" id="scanTorch" type="button" hidden>开灯</button>
+      <button class="btn btn-ghost-dark" id="scanManual" type="button" data-i18n="sell_manual">输入编号</button>
+    </div>
+    <div class="scan-error" id="scanError" hidden>
+      <span class="scan-error-bear" id="scanErrorBear"></span>
+      <h3 id="scanErrTitle"></h3>
+      <p id="scanErrText"></p>
+      <div class="row2">
+        <button class="btn btn-ghost-dark" id="scanErrClose" type="button" data-i18n="close">关闭</button>
+        <button class="btn btn-primary" id="scanRetry" type="button" data-i18n="sc_retry">重试</button>
+      </div>
+      <button class="btn btn-ghost-dark" id="scanErrSettings" type="button" data-i18n="sc_openSettings" hidden>去设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 数量面板 ============ -->
+<div class="sheet" id="qtySheet" hidden>
+  <div class="sheet-mask" data-close="qtySheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="qtyBear"></span>
+    <div class="sheet-head">
+      <h3 id="qtyName">—</h3>
+      <span class="tag" id="qtyUnitTag">件</span>
+    </div>
+    <div class="kv"><span data-i18n="unitPrice">单价</span><b id="qtyPrice">—</b></div>
+    <div class="kv"><span data-i18n="stock">库存</span><b id="qtyStock">—</b></div>
+    <p class="warn" id="qtyWarn" hidden></p>
+
+    <div class="qty-row">
+      <button type="button" class="step" data-step="-1" aria-label="minus">−</button>
+      <input id="qtyInput" type="number" inputmode="decimal" step="0.01" min="0" value="1">
+      <button type="button" class="step" data-step="1" aria-label="plus">+</button>
+    </div>
+    <div class="quick" id="qtyQuick"></div>
+
+    <div class="amount-row">
+      <span data-i18n="amount">金额</span>
+      <strong id="qtyAmount">¥0.00</strong>
+    </div>
+
+    <button class="btn btn-primary btn-block btn-lg" id="qtyAdd" type="button" data-i18n="sell_add">加入清单</button>
+    <div class="row2">
+      <button class="btn btn-ghost" id="qtyCancel" type="button" data-i18n="cancel">取消</button>
+      <button class="btn btn-soft" id="qtyNext" type="button" data-i18n="sell_scanAgain">继续扫码</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 结算面板 ============ -->
+<div class="sheet" id="coSheet" hidden>
+  <div class="sheet-mask" data-close="coSheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="coBear"></span>
+    <div class="sheet-head"><h3 data-i18n="co_title">本单结算</h3></div>
+    <p class="sheet-sub" id="coSub"></p>
+    <div class="co-list" id="coList"></div>
+    <div class="amount-row big">
+      <span data-i18n="co_total">应收合计</span>
+      <strong id="coTotal">¥0.00</strong>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" id="coPay" type="button" data-i18n="co_pay">确认收款</button>
+    <button class="btn btn-text btn-block" id="coCancel" type="button" data-i18n="cancel">取消</button>
+  </div>
+</div>
+
+<!-- ============ 收款成功浮层 ============ -->
+<div class="overlay" id="okOverlay" hidden>
+  <div class="ok-card">
+    <span class="ok-bear" id="okBear"></span>
+    <h2 id="okTitle" data-i18n="co_paid">收款成功</h2>
+    <div class="ok-amount" id="okAmount">¥0.00</div>
+    <p id="okThanks" data-i18n="co_thanks">谢谢惠顾，欢迎再来！</p>
+    <button class="btn btn-primary btn-block" id="okAgain" type="button" data-i18n="co_again">再开一单</button>
+    <button class="btn btn-primary btn-block btn-back" id="okBack" type="button" data-i18n="co_back">返回</button>
+  </div>
+</div>
+
+<!-- ============ 二维码面板 ============ -->
+<div class="sheet" id="qrSheet" hidden>
+  <div class="sheet-mask" data-close="qrSheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="qrBear"></span>
+    <div class="sheet-head"><h3 id="qrName">—</h3></div>
+    <p class="sheet-sub" id="qrHint"></p>
+    <div class="qr-box"><img id="qrImg" alt="QR"></div>
+    <div class="qr-meta"><span id="qrPrice"></span><span class="dot">·</span><span id="qrCode"></span></div>
+    <div class="row2">
+      <button class="btn btn-soft" id="qrSave" type="button" data-i18n="pd_savePng">保存图片</button>
+      <button class="btn btn-primary" id="qrPrint" type="button" data-i18n="pd_print">打印标签</button>
+    </div>
+    <div class="row2">
+      <button class="btn btn-ghost" id="qrEdit" type="button" data-i18n="edit">编辑</button>
+      <button class="btn btn-danger" id="qrDel" type="button" data-i18n="delete">删除</button>
+    </div>
+    <div class="row2">
+      <button class="btn btn-soft" id="qrMore" type="button" data-i18n="nm_continue">继续入库</button>
+      <button class="btn btn-text" id="qrClose" type="button" data-i18n="close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 输入品名入库 ============ -->
+<div class="sheet" id="nameSheet" hidden>
+  <div class="sheet-mask" data-close="nameSheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="nmBear"></span>
+    <div class="sheet-head">
+      <h3 data-i18n="nm_title">输入品名入库</h3>
+      <span class="tag" id="nmUnitTag">件</span>
+    </div>
+    <p class="sheet-sub" data-i18n="nm_sub"></p>
+
+    <label class="field">
+      <span class="field-label" data-i18n="name">品名</span>
+      <input class="input" id="nmName" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-ph="nm_nameP">
+    </label>
+    <div class="nm-sug" id="nmSug" hidden></div>
+
+    <div id="nmExistingBox" hidden>
+      <p class="nm-flag" id="nmFlag"></p>
+      <div class="kv"><span data-i18n="unitPrice">单价</span><b id="nmPrice">—</b></div>
+      <div class="kv"><span data-i18n="st_currentStock">当前库存</span><b id="nmStock">—</b></div>
+    </div>
+
+    <div id="nmNewFields">
+      <label class="field">
+        <span class="field-label" data-i18n="unitPrice">单价</span>
+        <span class="input-money"><i>¥</i><input class="input" id="nmPriceIn" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="st_priceP"></span>
+      </label>
+      <div class="field">
+        <span class="field-label" data-i18n="st_pricing">计价方式</span>
+        <div class="seg" id="nmUnitSeg">
+          <button type="button" class="on" data-unit="pc" data-i18n="byPiece">按件</button>
+          <button type="button" data-unit="jin" data-i18n="byJin">按斤</button>
+        </div>
+      </div>
+      <p class="help nm-help" data-i18n="nm_willCreate"></p>
+    </div>
+
+    <div class="field nm-qty-field">
+      <span class="field-label" id="nmQtyLabel">入库数量</span>
+      <div class="qty-row">
+        <button type="button" class="step" data-step="-1" aria-label="minus">−</button>
+        <input id="nmQty" type="number" inputmode="decimal" step="1" min="0" value="" placeholder="0">
+        <button type="button" class="step" data-step="1" aria-label="plus">+</button>
+      </div>
+    </div>
+    <div class="quick" id="nmQuick"></div>
+
+    <button class="btn btn-primary btn-block btn-lg" id="nmSave" type="button" data-i18n="nm_save">确认入库</button>
+    <button class="btn btn-text btn-block" id="nmCancel" type="button" data-i18n="cancel">取消</button>
+  </div>
+</div>
+
+<!-- ============ 备份方式选择 ============ -->
+<div class="sheet" id="backupSheet" hidden>
+  <div class="sheet-mask" data-close="backupSheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="bkBear"></span>
+    <div class="sheet-head"><h3 data-i18n="se_backupTitle">备份</h3></div>
+    <p class="sheet-sub" data-i18n="se_backupSub"></p>
+    <div class="bk-actions">
+      <button class="btn btn-soft btn-block" id="bkLocal" type="button" data-i18n="se_backupLocal">备份到本机</button>
+      <button class="btn btn-soft btn-block" id="bkMail" type="button" data-i18n="se_backupMailBtn">备份到邮箱</button>
+    </div>
+    <button class="btn btn-text btn-block" id="bkCancel" type="button" data-i18n="cancel">取消</button>
+  </div>
+</div>
+
+<!-- ============ 手动输入编号 ============ -->
+<div class="sheet" id="codeSheet" hidden>
+  <div class="sheet-mask" data-close="codeSheet"></div>
+  <div class="sheet-panel">
+    <span class="sheet-bear" id="codeBear"></span>
+    <div class="sheet-head"><h3 data-i18n="sc_manualTitle">手动输入编号</h3></div>
+    <label class="field">
+      <span class="field-label" data-i18n="code">编号</span>
+      <input class="input" id="codeInput" type="text" autocomplete="off" inputmode="text" data-i18n-ph="sc_manualP">
+    </label>
+    <div class="row2">
+      <button class="btn btn-ghost" id="codeCancel" type="button" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" id="codeOk" type="button" data-i18n="sc_submit">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 打印区（屏幕上不可见，仅在打印时输出） ============ -->
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- ============ 轻提示 ============ -->
+<div id="toast" class="toast" hidden></div>
+
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcode-generator.js"></script>
+<script src="js/bears.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/store.js"></script>
+<script src="js/scanner.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

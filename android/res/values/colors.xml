@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bear_bg">#FFF2F8FE</color>
+    <color name="bear_bar">#FFEAF5FE</color>
+    <color name="bear_accent">#FF2F86D6</color>
+</resources>

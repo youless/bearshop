@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BearTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bear_bg</item>
+        <item name="android:colorBackground">@color/bear_bg</item>
+        <item name="android:statusBarColor">@color/bear_bar</item>
+        <item name="android:navigationBarColor">@color/bear_bar</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">@color/bear_accent</item>
+    </style>
+</resources>
